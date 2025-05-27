@@ -1,0 +1,6 @@
+plamo_env/
+__pycache__/
+*.pyc
+.git/
+.gitignore
+*.md
