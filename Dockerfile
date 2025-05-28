@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     git \
     wget \
     build-essential \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
@@ -23,10 +24,16 @@ RUN python -m pip install torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 --i
 RUN python -m pip install numpy>=1.26.4 numba>=0.60.0 transformers>=4.44.2 \
     bitsandbytes accelerate sentencepiece protobuf einops
 
-# ビルドできなくてワロタ決め打ち
-RUN python -m pip install https://github.com/Dao-AILab/causal-conv1d/releases/download/v1.5.0.post7/causal_conv1d-1.5.0.post7+cu12torch2.4cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
-RUN python -m pip install https://github.com/state-spaces/mamba/releases/download/v1.2.0.post1/mamba_ssm-1.2.0.post1+cu121torch2.4cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
+RUN python -m pip install fastapi>=0.104.1 uvicorn[standard]>=0.24.0 pydantic>=2.5.0
+
+RUN python -m pip install https://github.com/Dao-AILab/causal-conv1d/releases/download/v1.5.0.post8/causal_conv1d-1.5.0.post8+cu12torch2.4cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
+RUN python -m pip install https://github.com/state-spaces/mamba/releases/download/v2.2.4/mamba_ssm-2.2.4+cu12torch2.4cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
 
 COPY . .
 
-CMD ["/bin/bash"]
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=30s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8000/api/health || exit 1
+
+CMD ["python", "api.py"]

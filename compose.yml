@@ -1,0 +1,38 @@
+services:
+  plamo-translation:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: plamo-translation
+    ports:
+      - "8000:8000"
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./models:/app/models
+      - ./logs:/app/logs
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - plamo-network
+
+networks:
+  plamo-network:
+    driver: bridge
+
+volumes:
+  models:
+  logs:
